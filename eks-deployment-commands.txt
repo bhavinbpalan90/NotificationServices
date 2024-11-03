@@ -1,0 +1,38 @@
+1. aws configure
+2. Install kubectl
+
+    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/darwin/amd64/kubectl"
+
+    chmod +x ./kubectl
+
+    sudo mv ./kubectl /usr/local/bin/kubectl
+
+    kubectl version --client
+
+3. Install eksctl
+
+    curl --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_Darwin_amd64.tar.gz" | tar xz -C /tmp
+
+    sudo mv /tmp/eksctl /usr/local/bin
+
+    eksctl version
+
+4. Create EKS Cluster
+
+    eksctl create cluster --name email-notification-cluster --region us-east-1 --nodegroup-name standard-nodes --node-type t2.micro --nodes 1
+
+
+5. Push using Docker
+
+docker tag email-notification:latest 733318626765.dkr.ecr.us-east-1.amazonaws.com/notification/email-notification:latest
+
+
+6.
+
+$(aws ecr get-login --no-include-email --region us-east-1)
+docker push 733318626765.dkr.ecr.us-east-1.amazonaws.com/notification/email-notification:latest
+
+
+733318626765.dkr.ecr.us-east-1.amazonaws.com/notification/email-notification:latest
+
+kubectl apply -f email.yaml
