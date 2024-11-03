@@ -17,6 +17,6 @@ extra_vars = [{'appointment_date': appointment_date, 'patient_name' : patient_na
                'appointment_time' : appointment_time, 'new_date' : new_date, 'old_date' : old_date
                 , 'new_time' : new_time, 'old_time' : old_time }]
 
-#Utils.sendNewAppointmentNotification(recipient_email, extra_vars)
-#Utils.sendAppointmentCancellationNotification(recipient_email, extra_vars)
+Utils.sendNewAppointmentNotification(recipient_email, extra_vars)
+Utils.sendAppointmentCancellationNotification(recipient_email, extra_vars)
 Utils.sendAppointmentRescheduleNotification(recipient_email, extra_vars)
