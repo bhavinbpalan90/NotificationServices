@@ -8,3 +8,6 @@ pip install pymysql boto3
 pip install python-dotenv
 
 conda install python-dotenv
+
+conda install python=3.12
+conda install pandas

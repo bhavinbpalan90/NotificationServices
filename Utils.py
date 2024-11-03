@@ -1,6 +1,10 @@
 import smtplib
+import pymysql
+import boto3
+import pandas as pd
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import html
 
 from dotenv import dotenv_values
 config = dotenv_values(".env")
@@ -12,6 +16,125 @@ SMTP_PORT = 587  # For STARTTLS, use port 587. For SSL, use port 465.
 # Replace with your SMTP credentials
 SMTP_USERNAME = config['SMTP_USERNAME']
 SMTP_PASSWORD = config['SMTP_PASSWORD']
+
+
+# AWS RDS configuration
+rds_host = "notificationdb.cdzgh7cofuep.us-east-1.rds.amazonaws.com"  # Endpoint of your RDS instance
+db_name = "notificationdb"
+username = config['MYSQL_USER']
+password = config['MYSQL_PASS']
+port = 3306
+
+
+# Function to execute a query and display the results
+def query_rds(query):
+    # Establish a connection to the RDS MySQL database
+    try:
+        # Connect without specifying the database
+        connection = pymysql.connect(
+            host=rds_host,
+            user=username,
+            password=password,
+            port=port
+        )
+        
+        with connection.cursor() as cursor:
+            # Connect to the specific database
+            connection.select_db("notificationdb")
+            
+            # Execute the query
+            cursor.execute(query)
+            
+            # Fetch all results
+            results = cursor.fetchall()
+            
+            # Get column names from cursor description
+            columns = [desc[0] for desc in cursor.description]
+            
+            # Convert to a DataFrame
+            df = pd.DataFrame(results, columns=columns)
+            
+            return df
+
+            
+                
+    except pymysql.MySQLError as e:
+        print("Error connecting to RDS MySQL:", e)
+    finally:
+        # Close the connection
+        if connection:
+            connection.close()
+
+
+def getAppointmentTemplate(templateType):
+    sqlQry = "SELECT * FROM email_templates where template_name = '" + templateType + "'"
+    template = query_rds(sqlQry)
+    return template
+
+
+def format_email(row, vars_dict):
+        # Merge additional variables directly passed to the function
+        all_vars = vars_dict
+
+        # Escape HTML special characters in the variables to prevent breaking HTML
+        all_vars_safe = {key: html.escape(str(value)) for key, value in all_vars.items()}
+
+        
+        # Format the subject and body using the provided variables
+        subject = row['subject'].format(**all_vars_safe)
+        # Replace new line characters with <br> tags for HTML formatting
+        body = row['body'].format(**all_vars_safe).replace('\n', '<br>')
+        return pd.Series([subject, body])
+
+
+def sendNewAppointmentNotification(emailId, extra_vars):
+    sampleTemplate = getAppointmentTemplate('appointment_schedule')
+    # Apply the function to each row, passing the corresponding variable dictionary from extra_vars
+    sampleTemplate[['formatted_subject', 'formatted_body']] = [
+        format_email(row, extra_vars[i]) for i, row in sampleTemplate.iterrows()
+        ]
+
+    subject = str(sampleTemplate.iloc[0]['formatted_subject'])
+    body = str(sampleTemplate.iloc[0]['formatted_body'])
+
+    ## Print Subject & Body
+    #print("Subject is: ", subject)
+    #print("Body of Email is: ", body)
+
+    sendEmail(subject,emailId,body,body)
+
+def sendAppointmentCancellationNotification(emailId, extra_vars):
+    sampleTemplate = getAppointmentTemplate('appointment_cancel')
+    # Apply the function to each row, passing the corresponding variable dictionary from extra_vars
+    sampleTemplate[['formatted_subject', 'formatted_body']] = [
+        format_email(row, extra_vars[i]) for i, row in sampleTemplate.iterrows()
+        ]
+
+    subject = str(sampleTemplate.iloc[0]['formatted_subject'])
+    body = str(sampleTemplate.iloc[0]['formatted_body'])
+
+    ## Print Subject & Body
+    #print("Subject is: ", subject)
+    #print("Body of Email is: ", body)
+
+    sendEmail(subject,emailId,body,body)
+
+def sendAppointmentRescheduleNotification(emailId, extra_vars):
+    sampleTemplate = getAppointmentTemplate('appointment_reschedule')
+    # Apply the function to each row, passing the corresponding variable dictionary from extra_vars
+    sampleTemplate[['formatted_subject', 'formatted_body']] = [
+        format_email(row, extra_vars[i]) for i, row in sampleTemplate.iterrows()
+        ]
+
+    subject = str(sampleTemplate.iloc[0]['formatted_subject'])
+    body = str(sampleTemplate.iloc[0]['formatted_body'])
+
+    ## Print Subject & Body
+    #print("Subject is: ", subject)
+    #print("Body of Email is: ", body)
+
+    sendEmail(subject,emailId,body,body)
+
 
 
 def sendEmail(subject, recipient_email, body_text, body_html):
@@ -40,64 +163,4 @@ def sendEmail(subject, recipient_email, body_text, body_html):
     except Exception as e:
         print("Error sending email:", e)
 
-def newAppointment(recipient_email,appointmentNo,appointmentDate,patientName,doctorName):
-    # Replace with the recipient's email
-    subject = "New Appointment Confirmation"
-    body_text = f"""Dear {patientName}, 
-                This is to confirm your appointment {appointmentNo} on {appointmentDate} with {doctorName}. 
-                Please reach out to us in case of any changes needed. Thanks, Healthcare"""
-    body_html = f"""<html>
-    <head></head>
-    <body>
-    <h1>Appointment Confirmation</h1>
-    <p><br>Dear {patientName}, <br><br>
-                This is to confirm your appointment {appointmentNo} on {appointmentDate} with {doctorName}. <br> <br>
-                Please reach out to us in case of any changes needed. 
-                <br><br>
-                Thanks, Healthcare</p>
-    </body>
-    </html>
-    """
-    sendEmail(subject, recipient_email, body_text, body_html)
 
-
-def cancelAppointment(recipient_email,appointmentNo,appointmentDate,patientName,doctorName):
-    # Replace with the recipient's email
-    subject = "Appointment Cancellation Confirmation"
-    body_text = f"""Dear {patientName}, 
-                This is to confirm cancellation of your appointment {appointmentNo} on {appointmentDate} with {doctorName}. 
-                Please reach out to us in case if you need to setup new appointment. Thanks, Healthcare"""
-    body_html = f"""<html>
-    <head></head>
-    <body>
-    <h1>Appointment Cancellation Confirmation</h1>
-    <p><br>Dear {patientName}, <br><br>
-                This is to confirm cancellation of your appointment {appointmentNo} on {appointmentDate} with {doctorName}. <br> <br>
-                Please reach out to us in case if you need to setup new appointment. 
-                <br><br>
-                Thanks, Healthcare</p>
-    </body>
-    </html>
-    """
-    sendEmail(subject, recipient_email, body_text, body_html)
-
-
-def rescheduleAppointment(recipient_email,appointmentNo,appointmentDate,patientName,doctorName):
-    # Replace with the recipient's email
-    subject = "Appointment Reschedule Confirmation"
-    body_text = f"""Dear {patientName}, 
-                This is to confirm reschedule of your appointment {appointmentNo} to new data {appointmentDate} with {doctorName}. 
-                Please reach out to us in case if needed any assistance. Thanks, Healthcare"""
-    body_html = f"""<html>
-    <head></head>
-    <body>
-    <h1>Appointment Reschedule Confirmation</h1>
-    <p><br>Dear {patientName}, <br><br>
-                This is to confirm reschedule of your appointment {appointmentNo} to new data {appointmentDate} with {doctorName}. <br> <br>
-                Please reach out to us in case if needed any assistance. 
-                <br><br>
-                Thanks, Healthcare</p>
-    </body>
-    </html>
-    """
-    sendEmail(subject, recipient_email, body_text, body_html)
