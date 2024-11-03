@@ -1,0 +1,10 @@
+conda create --name bitsSS
+conda activate bitsSS
+conda install pymysql
+conda install boto3
+conda install python
+
+pip install pymysql boto3
+pip install python-dotenv
+
+conda install python-dotenv
