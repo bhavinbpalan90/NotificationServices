@@ -101,14 +101,3 @@ def rescheduleAppointment(recipient_email,appointmentNo,appointmentDate,patientN
     </html>
     """
     sendEmail(subject, recipient_email, body_text, body_html)
-
-
-recipient_email = "bhavinbpalan90@gmail.com" 
-appointmentNo = "AAJH123XS"
-appointmentDate = "11/10/24"
-patientName = "Bhavin Palan"
-doctorName = "Dr Test"
-
-newAppointment(recipient_email,appointmentNo,appointmentDate,patientName,doctorName)
-cancelAppointment(recipient_email,appointmentNo,appointmentDate,patientName,doctorName)
-rescheduleAppointment(recipient_email,appointmentNo,appointmentDate,patientName,doctorName)

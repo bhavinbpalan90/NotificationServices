@@ -5,7 +5,7 @@ import boto3
 rds_host = "notificationdb.cdzgh7cofuep.us-east-1.rds.amazonaws.com"  # Endpoint of your RDS instance
 db_name = "notificationdb"
 username = "admin"
-password = "Bits_ndb2010"
+password = "<credentials>"
 port = 3306
 
 
