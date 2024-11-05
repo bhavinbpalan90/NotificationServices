@@ -19,7 +19,7 @@
 
 4. Create EKS Cluster
 
-    eksctl create cluster --name email-notification-cluster --region us-east-1 --nodegroup-name standard-nodes --node-type t2.micro --nodes 1
+    eksctl create cluster --name notification-cluster --region us-east-1 --nodegroup-name standard-nodes --node-type t2.micro --nodes 1
 
 
 5. Push using Docker
@@ -36,3 +36,8 @@ docker push 733318626765.dkr.ecr.us-east-1.amazonaws.com/notification/email-noti
 733318626765.dkr.ecr.us-east-1.amazonaws.com/notification/email-notification:latest
 
 kubectl apply -f email.yaml
+
+kubectl apply -f anonymous-notify-role.yaml
+kubectl apply -f anonymous-notify-binding.yaml
+
+curl -k https://226318568cb5134e4a66f30d04a39b1d.gr7.us-east-1.eks.amazonaws.com/notify
