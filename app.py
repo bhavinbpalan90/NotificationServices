@@ -71,5 +71,10 @@ def reschedule_appointment_notification():
     Utils.sendAppointmentRescheduleNotification(recipient_email, extra_vars)
     return jsonify({'message': 'Reschedule email sent'}), 200
 
+@app.route('/', methods=['GET'])
+def notificationServerRunning():
+    print("Server is Running...")
+    return jsonify({'message': 'Server is Running...'}), 200
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5082)
+    app.run(host='0.0.0.0', port=5000)
